@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ano Are - Drawing Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="lobby" class="screen active">
+        <div class="container">
+            <h1>🎨 Ano Are</h1>
+            <p class="subtitle">Draw & Guess Game</p>
+
+            <div class="lobby-content">
+                <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+
+                <div class="button-group">
+                    <button id="createRoomBtn" class="btn btn-primary">Create Room</button>
+                    <button id="joinRoomBtn" class="btn btn-secondary">Join Room</button>
+                </div>
+
+                <div id="joinRoomInput" class="hidden">
+                    <input type="text" id="roomCode" placeholder="Enter room code" maxlength="6">
+                    <button id="confirmJoinBtn" class="btn btn-primary">Join</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game" class="screen">
+        <div class="container">
+            <div class="header">
+                <div class="room-info">
+                    <h2>Room: <span id="roomCodeDisplay"></span></h2>
+                    <button id="copyRoomCodeBtn" class="btn btn-small">Copy Code</button>
+                </div>
+                <div id="gameStatus" class="game-status"></div>
+            </div>
+
+            <div class="game-layout">
+                <!-- Left Panel: Canvas and Tools -->
+                <div class="canvas-panel">
+                    <div id="wordDisplay" class="word-display hidden"></div>
+
+                    <div id="drawingTools" class="drawing-tools hidden">
+                        <div class="tool-section">
+                            <label>Brush Size:</label>
+                            <input type="range" id="brushSize" min="1" max="20" value="3">
+                            <span id="brushSizeValue">3</span>
+                        </div>
+
+                        <div class="tool-section">
+                            <label>Colors:</label>
+                            <div class="color-palette">
+                                <button class="color-btn active" data-color="#000000" style="background: #000000;"></button>
+                                <button class="color-btn" data-color="#FF0000" style="background: #FF0000;"></button>
+                                <button class="color-btn" data-color="#00FF00" style="background: #00FF00;"></button>
+                                <button class="color-btn" data-color="#0000FF" style="background: #0000FF;"></button>
+                                <button class="color-btn" data-color="#FFFF00" style="background: #FFFF00;"></button>
+                                <button class="color-btn" data-color="#FF00FF" style="background: #FF00FF;"></button>
+                                <button class="color-btn" data-color="#00FFFF" style="background: #00FFFF;"></button>
+                                <button class="color-btn" data-color="#FFA500" style="background: #FFA500;"></button>
+                                <button class="color-btn" data-color="#FFFFFF" style="background: #FFFFFF; border: 1px solid #ccc;"></button>
+                            </div>
+                        </div>
+
+                        <div class="tool-section">
+                            <button id="clearCanvasBtn" class="btn btn-danger">Clear Canvas</button>
+                        </div>
+                    </div>
+
+                    <div class="canvas-wrapper">
+                        <canvas id="canvas" width="800" height="600"></canvas>
+                        <div id="canvasOverlay" class="canvas-overlay hidden">
+                            <div class="overlay-content">
+                                <h3>Waiting for drawer...</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="drawerControls" class="drawer-controls hidden">
+                        <input type="text" id="wordInput" placeholder="Enter a word to draw">
+                        <button id="getRandomWordBtn" class="btn btn-secondary">Random Word</button>
+                        <button id="startRoundBtn" class="btn btn-primary">Start Round</button>
+                        <button id="endRoundBtn" class="btn btn-danger hidden">End Round</button>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Chat and Leaderboard -->
+                <div class="side-panel">
+                    <div class="leaderboard">
+                        <h3>Leaderboard</h3>
+                        <div id="playerList"></div>
+                    </div>
+
+                    <div class="chat-container">
+                        <h3>Guesses</h3>
+                        <div id="chatMessages" class="chat-messages"></div>
+                        <div id="guessInput" class="guess-input hidden">
+                            <input type="text" id="guessText" placeholder="Type your guess...">
+                            <button id="submitGuessBtn" class="btn btn-primary">Guess</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
