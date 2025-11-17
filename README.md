@@ -6,9 +6,12 @@ A real-time multiplayer drawing and guessing game where one player draws while o
 
 - **Real-time multiplayer gameplay** using WebSocket connections
 - **Shareable room codes** - create a room and share the code with friends
+- **Round-robin drawer rotation** - everyone gets a turn to draw
+- **Automatic game flow** - drawer switches automatically after each round
 - **Drawing tools** with adjustable brush size, multiple colors
 - **Time-based scoring** - faster guesses earn more points
 - **Live leaderboard** - see rankings update in real-time
+- **Game completion** - game ends when all players have drawn, with winner announcement
 - **No database required** - all game data is stored in memory
 - **Responsive design** - works on desktop and mobile devices
 
@@ -77,12 +80,14 @@ npm run dev
 
 ## Game Rules
 
-1. One player is designated as the "drawer"
-2. The drawer chooses a word and draws it
+1. **Round-Robin Turns**: Each player gets a turn to be the "drawer"
+2. The drawer chooses a word and draws it on the canvas
 3. Other players try to guess the word by typing in chat
 4. Correct guesses earn points (faster = more points)
 5. Round ends when everyone guesses or drawer ends it manually
-6. Players are ranked by total score
+6. **Automatic Rotation**: After each round, the next player becomes the drawer
+7. **Game End**: The game ends when all players have had a turn to draw
+8. The player with the highest total score wins!
 
 ## Features Breakdown
 
@@ -90,6 +95,7 @@ npm run dev
 - Random 6-character room codes
 - Players can join/leave rooms freely
 - Automatic cleanup of empty rooms
+- Total rounds = number of players (everyone gets one turn)
 
 ### Drawing Features
 - Real-time canvas synchronization
@@ -108,6 +114,13 @@ npm run dev
 - All guesses visible to all players
 - Visual feedback for correct guesses
 - System messages for game events
+
+### Game Flow
+- Automatic drawer rotation after each round (3-second delay)
+- Round progress indicator (e.g., "Round 2/4")
+- Game automatically ends when all players have drawn
+- Winner announcement with final scores
+- "Play Again" button to restart
 
 ## Customization
 

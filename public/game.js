@@ -248,13 +248,13 @@ socket.on('player-left', (room) => {
     addSystemMessage('A player left the game');
 });
 
-socket.on('round-started', ({ drawerId, wordLength, hint }) => {
+socket.on('round-started', ({ drawerId, drawerName, wordLength, hint, currentRound, totalRounds }) => {
     isDrawer = socket.id === drawerId;
     clearCanvas();
     chatMessages.innerHTML = '';
 
     if (isDrawer) {
-        gameStatus.textContent = 'You are drawing!';
+        gameStatus.textContent = `Round ${currentRound}/${totalRounds} - You are drawing!`;
         wordDisplay.classList.add('hidden');
         drawingTools.classList.remove('hidden');
         canvasOverlay.classList.add('hidden');
@@ -263,7 +263,7 @@ socket.on('round-started', ({ drawerId, wordLength, hint }) => {
         endRoundBtn.classList.remove('hidden');
         canvas.style.cursor = 'crosshair';
     } else {
-        gameStatus.textContent = `Guess the word! (${wordLength} letters)`;
+        gameStatus.textContent = `Round ${currentRound}/${totalRounds} - ${drawerName} is drawing! Guess the word (${wordLength} letters)`;
         wordDisplay.textContent = hint;
         wordDisplay.classList.remove('hidden');
         drawingTools.classList.add('hidden');
@@ -312,31 +312,66 @@ socket.on('round-ended', ({ word, leaderboard }) => {
     updatePlayerList();
     addSystemMessage(`Round ended! The word was: ${word}`, 'correct');
 
-    gameStatus.textContent = 'Round ended';
+    gameStatus.textContent = 'Round ended - Next drawer coming up...';
     drawingTools.classList.add('hidden');
     canvasOverlay.classList.remove('hidden');
     guessInput.classList.add('hidden');
     endRoundBtn.classList.add('hidden');
-
-    if (isDrawer) {
-        drawerControls.classList.remove('hidden');
-        wordInput.value = '';
-    }
+    drawerControls.classList.add('hidden');
+    wordDisplay.classList.add('hidden');
 });
 
-socket.on('drawer-changed', (room) => {
+socket.on('drawer-changed', ({ room, newDrawerId, newDrawerName, currentRound, totalRounds }) => {
     currentRoom = room;
     const player = room.players.find(p => p.id === socket.id);
     isDrawer = player ? player.isDrawer : false;
     updatePlayerList();
 
+    clearCanvas();
+    addSystemMessage(`${newDrawerName} is now the drawer!`, 'system');
+
     if (isDrawer) {
-        gameStatus.textContent = 'You are the drawer! Enter a word to start.';
+        gameStatus.textContent = `Round ${currentRound}/${totalRounds} - You are the drawer! Enter a word to start.`;
         drawerControls.classList.remove('hidden');
+        canvasOverlay.classList.add('hidden');
+        wordInput.value = '';
     } else {
-        gameStatus.textContent = 'Waiting for drawer to start...';
+        gameStatus.textContent = `Round ${currentRound}/${totalRounds} - Waiting for ${newDrawerName} to start...`;
         drawerControls.classList.add('hidden');
+        canvasOverlay.classList.remove('hidden');
     }
+});
+
+socket.on('game-ended', ({ finalLeaderboard, message }) => {
+    currentRoom.players = finalLeaderboard;
+    updatePlayerList();
+
+    // Clear the canvas and hide all controls
+    clearCanvas();
+    drawingTools.classList.add('hidden');
+    canvasOverlay.classList.remove('hidden');
+    guessInput.classList.add('hidden');
+    endRoundBtn.classList.add('hidden');
+    drawerControls.classList.add('hidden');
+    wordDisplay.classList.add('hidden');
+
+    // Show game over message
+    gameStatus.textContent = message;
+    addSystemMessage(message, 'correct');
+
+    // Display winner
+    const winner = finalLeaderboard[0];
+    addSystemMessage(`🏆 Winner: ${winner.name} with ${winner.score} points!`, 'correct');
+
+    // Show overlay with game over
+    const overlayContent = canvasOverlay.querySelector('.overlay-content');
+    overlayContent.innerHTML = `
+        <h3>🎉 Game Over! 🎉</h3>
+        <p>Winner: ${winner.name}</p>
+        <p>Score: ${winner.score} points</p>
+        <button class="btn btn-primary" onclick="location.reload()">Play Again</button>
+    `;
+    canvasOverlay.classList.remove('hidden');
 });
 
 socket.on('random-word', (word) => {
@@ -354,13 +389,15 @@ function switchToGameScreen() {
     roomCodeDisplay.textContent = currentRoom.code;
     updatePlayerList();
 
+    const roundInfo = `Round ${currentRoom.currentRound}/${currentRoom.totalRounds}`;
+
     if (isDrawer) {
-        gameStatus.textContent = 'You are the drawer! Enter a word to start.';
+        gameStatus.textContent = `${roundInfo} - You are the drawer! Enter a word to start.`;
         drawerControls.classList.remove('hidden');
         canvasOverlay.classList.add('hidden');
         drawingTools.classList.add('hidden');
     } else {
-        gameStatus.textContent = 'Waiting for drawer to start...';
+        gameStatus.textContent = `${roundInfo} - Waiting for drawer to start...`;
         drawerControls.classList.add('hidden');
         canvasOverlay.classList.remove('hidden');
         drawingTools.classList.add('hidden');

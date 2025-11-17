@@ -280,6 +280,17 @@ input[type="text"]:focus {
 .overlay-content h3 {
     color: white;
     font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.overlay-content p {
+    color: white;
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+.overlay-content .btn {
+    margin-top: 20px;
 }
 
 .drawer-controls {

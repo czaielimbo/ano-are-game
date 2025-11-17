@@ -25,6 +25,50 @@ function getRandomWord() {
   return wordBank[Math.floor(Math.random() * wordBank.length)];
 }
 
+// Function to move to next drawer
+function nextDrawer(room, roomCode) {
+  // Check if all players have drawn
+  const allHaveDrawn = room.players.every(p => p.hasDrawn);
+
+  if (allHaveDrawn) {
+    // Game ends
+    room.gameEnded = true;
+    io.to(roomCode).emit('game-ended', {
+      finalLeaderboard: room.players.sort((a, b) => b.score - a.score),
+      message: 'Game Over! Everyone has had a turn to draw.'
+    });
+    return;
+  }
+
+  // Find next player who hasn't drawn
+  room.currentDrawerIndex = (room.currentDrawerIndex + 1) % room.players.length;
+  let nextDrawerPlayer = room.players[room.currentDrawerIndex];
+
+  // Keep looking until we find someone who hasn't drawn
+  let attempts = 0;
+  while (nextDrawerPlayer.hasDrawn && attempts < room.players.length) {
+    room.currentDrawerIndex = (room.currentDrawerIndex + 1) % room.players.length;
+    nextDrawerPlayer = room.players[room.currentDrawerIndex];
+    attempts++;
+  }
+
+  // Reset all players' drawer status
+  room.players.forEach(p => p.isDrawer = false);
+
+  // Set new drawer
+  nextDrawerPlayer.isDrawer = true;
+  room.currentDrawer = nextDrawerPlayer.id;
+  room.currentRound++;
+
+  io.to(roomCode).emit('drawer-changed', {
+    room,
+    newDrawerId: nextDrawerPlayer.id,
+    newDrawerName: nextDrawerPlayer.name,
+    currentRound: room.currentRound,
+    totalRounds: room.totalRounds
+  });
+}
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -37,12 +81,18 @@ io.on('connection', (socket) => {
         id: socket.id,
         name: playerName,
         score: 0,
-        isDrawer: true
+        isDrawer: true,
+        hasDrawn: false
       }],
       currentWord: '',
       currentDrawer: socket.id,
+      currentDrawerIndex: 0,
       roundStartTime: null,
-      correctGuessers: []
+      correctGuessers: [],
+      gameStarted: false,
+      gameEnded: false,
+      totalRounds: 1,
+      currentRound: 1
     };
 
     rooms.set(roomCode, room);
@@ -70,8 +120,12 @@ io.on('connection', (socket) => {
       id: socket.id,
       name: playerName,
       score: 0,
-      isDrawer: false
+      isDrawer: false,
+      hasDrawn: false
     });
+
+    // Update total rounds when new player joins
+    room.totalRounds = room.players.length;
 
     socket.join(roomCode);
     socket.emit('room-joined', { roomCode, room });
@@ -93,12 +147,17 @@ io.on('connection', (socket) => {
     room.currentWord = word.toLowerCase();
     room.roundStartTime = Date.now();
     room.correctGuessers = [];
+    room.gameStarted = true;
+    player.hasDrawn = true;
 
     // Notify all players that round started
     io.to(roomCode).emit('round-started', {
       drawerId: socket.id,
+      drawerName: player.name,
       wordLength: word.length,
-      hint: word.split('').map((c, i) => i === 0 ? c : '_').join('')
+      hint: word.split('').map((c, i) => i === 0 ? c : '_').join(''),
+      currentRound: room.currentRound,
+      totalRounds: room.totalRounds
     });
 
     // Send word only to drawer
@@ -161,6 +220,14 @@ io.on('connection', (socket) => {
           word: room.currentWord,
           leaderboard: room.players.sort((a, b) => b.score - a.score)
         });
+
+        // Auto-advance to next drawer after 3 seconds
+        setTimeout(() => {
+          const roomCheck = rooms.get(roomCode);
+          if (roomCheck && !roomCheck.gameEnded) {
+            nextDrawer(roomCheck, roomCode);
+          }
+        }, 3000);
       }
     }
   });
@@ -177,6 +244,14 @@ io.on('connection', (socket) => {
       word: room.currentWord,
       leaderboard: room.players.sort((a, b) => b.score - a.score)
     });
+
+    // Auto-advance to next drawer after 3 seconds
+    setTimeout(() => {
+      const roomCheck = rooms.get(roomCode);
+      if (roomCheck && !roomCheck.gameEnded) {
+        nextDrawer(roomCheck, roomCode);
+      }
+    }, 3000);
   });
 
   // Change drawer
