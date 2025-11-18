@@ -32,7 +32,6 @@ const copyRoomCodeBtn = document.getElementById('copyRoomCodeBtn');
 const gameStatus = document.getElementById('gameStatus');
 const wordDisplay = document.getElementById('wordDisplay');
 const drawingTools = document.getElementById('drawingTools');
-const canvasOverlay = document.getElementById('canvasOverlay');
 const drawerControls = document.getElementById('drawerControls');
 const wordInput = document.getElementById('wordInput');
 const getRandomWordBtn = document.getElementById('getRandomWordBtn');
@@ -257,7 +256,6 @@ socket.on('round-started', ({ drawerId, drawerName, wordLength, hint, currentRou
         gameStatus.textContent = `Round ${currentRound}/${totalRounds} - You are drawing!`;
         wordDisplay.classList.add('hidden');
         drawingTools.classList.remove('hidden');
-        canvasOverlay.classList.add('hidden');
         drawerControls.classList.add('hidden');
         guessInput.classList.add('hidden');
         endRoundBtn.classList.remove('hidden');
@@ -267,7 +265,6 @@ socket.on('round-started', ({ drawerId, drawerName, wordLength, hint, currentRou
         wordDisplay.textContent = hint;
         wordDisplay.classList.remove('hidden');
         drawingTools.classList.add('hidden');
-        canvasOverlay.classList.remove('hidden');
         drawerControls.classList.add('hidden');
         guessInput.classList.remove('hidden');
         canvas.style.cursor = 'default';
@@ -314,7 +311,6 @@ socket.on('round-ended', ({ word, leaderboard }) => {
 
     gameStatus.textContent = 'Round ended - Next drawer coming up...';
     drawingTools.classList.add('hidden');
-    canvasOverlay.classList.remove('hidden');
     guessInput.classList.add('hidden');
     endRoundBtn.classList.add('hidden');
     drawerControls.classList.add('hidden');
@@ -333,12 +329,10 @@ socket.on('drawer-changed', ({ room, newDrawerId, newDrawerName, currentRound, t
     if (isDrawer) {
         gameStatus.textContent = `Round ${currentRound}/${totalRounds} - You are the drawer! Enter a word to start.`;
         drawerControls.classList.remove('hidden');
-        canvasOverlay.classList.add('hidden');
         wordInput.value = '';
     } else {
         gameStatus.textContent = `Round ${currentRound}/${totalRounds} - Waiting for ${newDrawerName} to start...`;
         drawerControls.classList.add('hidden');
-        canvasOverlay.classList.remove('hidden');
     }
 });
 
@@ -349,7 +343,6 @@ socket.on('game-ended', ({ finalLeaderboard, message }) => {
     // Clear the canvas and hide all controls
     clearCanvas();
     drawingTools.classList.add('hidden');
-    canvasOverlay.classList.remove('hidden');
     guessInput.classList.add('hidden');
     endRoundBtn.classList.add('hidden');
     drawerControls.classList.add('hidden');
@@ -362,16 +355,6 @@ socket.on('game-ended', ({ finalLeaderboard, message }) => {
     // Display winner
     const winner = finalLeaderboard[0];
     addSystemMessage(`🏆 Winner: ${winner.name} with ${winner.score} points!`, 'correct');
-
-    // Show overlay with game over
-    const overlayContent = canvasOverlay.querySelector('.overlay-content');
-    overlayContent.innerHTML = `
-        <h3>🎉 Game Over! 🎉</h3>
-        <p>Winner: ${winner.name}</p>
-        <p>Score: ${winner.score} points</p>
-        <button class="btn btn-primary" onclick="location.reload()">Play Again</button>
-    `;
-    canvasOverlay.classList.remove('hidden');
 });
 
 socket.on('random-word', (word) => {
@@ -394,12 +377,10 @@ function switchToGameScreen() {
     if (isDrawer) {
         gameStatus.textContent = `${roundInfo} - You are the drawer! Enter a word to start.`;
         drawerControls.classList.remove('hidden');
-        canvasOverlay.classList.add('hidden');
         drawingTools.classList.add('hidden');
     } else {
         gameStatus.textContent = `${roundInfo} - Waiting for drawer to start...`;
         drawerControls.classList.add('hidden');
-        canvasOverlay.classList.remove('hidden');
         drawingTools.classList.add('hidden');
     }
 }
